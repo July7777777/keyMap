@@ -13,8 +13,13 @@
     "windows": [
       {
         "title": "keymap",
-        "width": 800,
-        "height": 600
+        "width": 220,
+        "height": 400,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": true
       }
     ],
     "security": {
