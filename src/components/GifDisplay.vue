@@ -2,17 +2,71 @@
   import { ref, onMounted, onUnmounted } from 'vue';
   import { eventBus } from '../utils/eventBus';
   import { invoke } from '@tauri-apps/api/core';
+  import type { KeyboardEventData } from '../utils/keyboardListener';
 
-  const gifList = [
-    // 三个图片来自百度图片搜索，如有侵权请与我联系
-    'https://ww2.sinaimg.cn/mw690/6f250299gy1hsr186q5z0g208w0ftx6t.gif',
-    'https://pic.rmb.bdstatic.com/bjh/cms/241213/3907dad47ae9f1610ac54e97e8fc2ec0_1734084296.0824_720.gif',
-    'https://wx2.sinaimg.cn/mw690/a007f1e0ly1i8ig2nsl9hg204702jq3a.gif',
-  ];
+  // 三个图片来自百度图片搜索，如有侵权请与我联系
 
-  const currentIndex = ref(0);
-  const currentGif = ref(gifList[0]);
-  const lastKey = ref('');
+  const down = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fitem%2F201910%2F08%2F20191008123152_qfquy.thumb.400_0.gif&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1783845882&t=8eb5c61d587bac670785199af26e4162'
+  const right = 'https://img.soogif.com/vqqgKD83MSeEjmw3JHi9nlZvghhtPV56.gif_s400x0'
+  const left = 'https://pic.rmb.bdstatic.com/bjh/down/fe7e393653abab669185921289a87937.gif'
+  const up = 'https://wx4.sinaimg.cn/bmiddle/006APoFYly1fkeq8ov0zpg308c08cq3u.gif'
+  const C_ = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fitem%2F202003%2F27%2F20200327020300_8UVjz.thumb.400_0.gif&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1783846708&t=b16640ce6ddd1b2844bec59c563e5e4a'
+
+  const C = {
+    gif: C_,
+    key: 'C',
+    description: '跳跃'
+  }
+  const att = {
+    gif: 'https://news-vod.voc.com.cn/9/2023/08/30/e14372b528a2a242b6c81ac489d1bf99446688ac1693397303.jpg?pid=6177335',
+    key: 'x',
+    description: '攻击'
+  }
+  const defined = {
+    gif: 'https://pic.rmb.bdstatic.com/bjh/719fbef7d2c545406f7f9d0e3a63cdb52734.gif',
+    key: '双手离开键盘',
+    description: '站立'
+  }
+
+  const move = {
+    l: {
+      gif: left,
+      key: '←',
+      description: '向左走'
+    },
+    d: {
+      gif: down,
+      key: '↓',
+      description: '向下走'
+    },
+    r: {
+      gif: right,
+      key: '→',
+      description: '向右走'
+    },
+    u: {
+      gif: up,
+      key: '↑',
+      description: '向上走'
+    }
+  }
+  const run = {
+    r: {
+      gif: 'https://pic.rmb.bdstatic.com/0bee242d564e26ba033343e166e34d9f.gif',
+      key: '→',
+      description: '向右跑'
+    },
+    l: {
+      gif: 'https://pic.rmb.bdstatic.com/bjh/down/fe7e393653abab669185921289a87937.gif',
+      key: '←',
+      description: '向左跑'
+    },
+  }
+  const state = ref({
+    gif: defined.gif,
+    key: defined.key,
+    description: defined.description
+  });
   const isDragging = ref(false);
   const initialMouseX = ref(0);
   const initialMouseY = ref(0);
@@ -21,41 +75,53 @@
   const isMouseOver = ref(false);
 
   function handleKeyPress(data: unknown) {
-    const key = data as string;
-    console.log('handleKeyPress called with:', key);
-    lastKey.value = key;
+    const eventData = data as KeyboardEventData;
+    console.log('handleKeyPress called with:', eventData);
+    const { eventType, isDoubleTap, pressCount, key } = eventData;
 
-    switch (key) {
-      case '1':
-        currentIndex.value = 0;
-        break;
-      case '2':
-        currentIndex.value = 1;
-        break;
-      case '3':
-        currentIndex.value = 2;
-        break;
-      case 'ArrowRight':
-      case 'Right':
-      case 'A':
-        currentIndex.value = (currentIndex.value + 1) % gifList.length;
-        break;
-      case 'ArrowLeft':
-      case 'Left':
-      case 'D':
-        currentIndex.value = (currentIndex.value - 1 + gifList.length) % gifList.length;
-        break;
-      case 'ArrowUp':
-      case 'Up':
-        currentIndex.value = (currentIndex.value - 1 + gifList.length) % gifList.length;
-        break;
-      case 'ArrowDown':
-      case 'Down':
-        currentIndex.value = (currentIndex.value + 1) % gifList.length;
-        break;
+    console.log('事件类型:' + eventType, '是否双击:' + isDoubleTap, '点击次数:' + pressCount, '键:' + key);
+    if (eventType === 'keyup') {
+      state.value = defined;
+      return;
+    }
+    if (eventType === 'keydown') {
+      if (isDoubleTap) {
+        // 双击事件
+        console.log('Double Tap:', key);
+        switch (key) {
+          case 'LeftArrow':
+            state.value = run.l;
+            return;
+          case 'RightArrow':
+            // 向右跑
+            state.value = run.r;
+            return;
+          default: state.value = att; state.value.key = key;
+        }
+      }
+      switch (key) {
+        case 'C':
+          state.value = C;
+          return;
+        // 单击事件
+        case 'LeftArrow':
+          state.value = move.l;
+          return;
+        case 'RightArrow':
+          state.value = move.r;
+          return;
+        case 'DownArrow':
+          state.value = move.d;
+          return;
+        case 'UpArrow':
+          state.value = move.u;
+          return;
+        default: state.value = att; state.value.key = key;
+      }
     }
 
-    currentGif.value = gifList[currentIndex.value];
+
+    // currentGif.value = gifList[currentIndex.value];
   }
 
   async function onDragStart(event: MouseEvent) {
@@ -86,10 +152,10 @@
     const newWindowX = initialWindowX.value + deltaX;
     const newWindowY = initialWindowY.value + deltaY;
 
-    console.log('Drag Move:');
-    console.log('  Current Mouse: (', event.screenX, ', ', event.screenY, ')');
-    console.log('  Delta: (', deltaX, ', ', deltaY, ')');
-    console.log('  New Window: (', newWindowX, ', ', newWindowY, ')');
+    // console.log('Drag Move:');
+    // console.log('  Current Mouse: (', event.screenX, ', ', event.screenY, ')');
+    // console.log('  Delta: (', deltaX, ', ', deltaY, ')');
+    // console.log('  New Window: (', newWindowX, ', ', newWindowY, ')');
 
     await invoke('set_window_position', { x: newWindowX, y: newWindowY });
   }
@@ -115,11 +181,11 @@
   }
 
   onMounted(() => {
-    eventBus.on('key-press', handleKeyPress);
+    eventBus.on('keyboard-event', handleKeyPress);
   });
 
   onUnmounted(() => {
-    eventBus.off('key-press', handleKeyPress);
+    eventBus.off('keyboard-event', handleKeyPress);
     window.removeEventListener('mousemove', onDragMove);
     window.removeEventListener('mouseup', onDragEnd);
   });
@@ -162,16 +228,15 @@
       </svg>
     </div>
     <img
-      :src="currentGif"
+      :src="state.gif"
       alt="GIF"
       class="gif-image"
     />
     <div class="info-panel">
-      <div class="indicator">
-        {{ currentIndex + 1 }} / {{ gifList.length }}
-      </div>
       <div class="key-hint">
-        Last Key: <span>{{ lastKey || 'Press any key' }}</span>
+        <span class="key">{{ state.key }}</span>
+        <span class="fff">:</span>
+        <span class="description">{{ state.description }}</span>
       </div>
     </div>
   </div>
@@ -226,32 +291,64 @@
 
   .info-panel {
     position: fixed;
-    top: 10px;
-    left: 50%;
+    top: 55px;
+    left: 57%;
+    width: 100%;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     gap: 5px;
     align-items: center;
-    /* background: rgba(0, 0, 0, 0.5); */
-    /* backdrop-filter: blur(10px); */
-    padding: 10px;
-    /* border-radius: 20px; */
-  }
-
-  .indicator {
-    color: white;
-    font-size: 14px;
-    font-weight: 500;
+    padding: 10px 0;
   }
 
   .key-hint {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 14px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 200px;
+    justify-content: center;
   }
 
-  .key-hint span {
-    color: #4ade80;
+  .key {
+    position: absolute;
+    right: calc(50% + 8px);
+    white-space: nowrap;
+  }
+
+  .fff {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .description {
+    position: absolute;
+    left: calc(50% + 8px);
+    white-space: nowrap;
+  }
+
+  /* .indicator {
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+  } */
+
+  .key,
+  .description {
+    font-size: 14px;
     font-weight: 600;
+  }
+
+  .key {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .description {
+    color: #4ade80;
+  }
+
+  .fff {
+    color: white;
   }
 </style>
