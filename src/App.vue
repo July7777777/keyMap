@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { onMounted } from 'vue';
-  import GifDisplay from './components/GifDisplay.vue';
+  import DNFSkill from './components/DNFSkill.vue';
   import { initKeyboardListener } from './utils/keyboardListener';
 
   onMounted(() => {
@@ -10,7 +10,7 @@
 
 <template>
   <div class="app">
-    <GifDisplay />
+    <DNFSkill />
   </div>
 </template>
 

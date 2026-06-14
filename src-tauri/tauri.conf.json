@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "keymap",
-        "width": 220,
-        "height": 400,
+        "width": 372,
+        "height": 206,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,
